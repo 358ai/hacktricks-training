@@ -37,6 +37,6 @@ jobs:
         # または、パイプラインで自動的に取得して読み込む処理を記述します
         run: |
           aws secretsmanager get-secret-value \
-            --secret-id TARGET_SECRET_NAME \
+            --secret-id flag_sts_lab_2 \
             --query 'SecretString' \
             --output text
